@@ -25,7 +25,7 @@ const allowedExtensions = ['epub', 'mobi', 'pdf', 'cbz', 'cbr', 'html', 'txt']
 const keyChars = "3469ACEGHLMNPRTY"
 const keyLength = 4
 
-function randomKey () {
+function randomKey() {
   const choices = Math.pow(keyChars.length, keyLength)
   const rnd = Math.floor(Math.random() * choices)
 
@@ -34,7 +34,7 @@ function randomKey () {
   }).join('')
 }
 
-function removeKey (key) {
+function removeKey(key) {
   console.log('Removing expired key', key)
   const info = app.context.keys.get(key)
   if (info) {
@@ -52,7 +52,7 @@ function removeKey (key) {
   }
 }
 
-function expireKey (key) {
+function expireKey(key) {
   // console.log('key', key, 'will expire in', expireDelay, 'seconds')
   const info = app.context.keys.get(key)
   const timer = setTimeout(removeKey, expireDelay * 1000, key)
@@ -64,9 +64,9 @@ function expireKey (key) {
   return timer
 }
 
-function flash (ctx, data) {
+function flash(ctx, data) {
   console.log(data)
-  ctx.cookies.set('flash', encodeURIComponent(JSON.stringify(data)), {overwrite: true, httpOnly: false})
+  ctx.cookies.set('flash', encodeURIComponent(JSON.stringify(data)), { overwrite: true, httpOnly: false })
 }
 
 const app = new Koa()
@@ -123,7 +123,7 @@ router.post('/generate', async ctx => {
     attempts++
   } while (ctx.keys.has(key))
 
-  console.log('Generated key ' + key + ', '+attempts+' attempt(s)')
+  console.log('Generated key ' + key + ', ' + attempts + ' attempt(s)')
 
   const info = {
     created: new Date(),
@@ -134,7 +134,7 @@ router.post('/generate', async ctx => {
   expireKey(key)
   setTimeout(() => {
     // remove if it is the same object
-    if(ctx.keys.get(key) === info) removeKey(key)
+    if (ctx.keys.get(key) === info) removeKey(key)
   }, maxExpireDuration * 1000)
 
   ctx.body = key
@@ -200,7 +200,7 @@ router.post('/upload', upload.single('file'), async ctx => {
 
   if (!type || !allowedTypes.includes(type.mime)) {
     flash(ctx, {
-      message: 'Uploaded file is of an invalid type: ' + ctx.request.file.originalname + ' (' + (type? type.mime : 'unknown mimetype') + ')',
+      message: 'Uploaded file is of an invalid type: ' + ctx.request.file.originalname + ' (' + (type ? type.mime : 'unknown mimetype') + ')',
       success: false,
       key: key
     })
@@ -292,7 +292,7 @@ router.post('/upload', upload.single('file'), async ctx => {
   }
 
   flash(ctx, {
-    message: 'Upload successful!<br/>'+(conversion ? ' Ebook was converted with ' + conversion + ' and sent' : ' Sent')+' to '+(info.agent.includes('Kobo') ? 'a Kobo device.' : (info.agent.includes('Kindle') ? 'a Kindle device.' : 'a device.'))+'<br/>Filename: ' + filename,
+    message: 'Upload successful!<br/>' + (conversion ? ' Ebook was converted with ' + conversion + ' and sent' : ' Sent') + ' to ' + (info.agent.includes('Kobo') ? 'a Kobo device.' : (info.agent.includes('Kindle') ? 'a Kindle device.' : 'a device.')) + '<br/>Filename: ' + filename,
     success: true,
     key: key
   })
@@ -313,7 +313,7 @@ router.get('/status/:key', async ctx => {
   const key = ctx.params.key.toUpperCase()
   const info = ctx.keys.get(key)
   if (!info) {
-    ctx.body = {error: 'Unknown key'}
+    ctx.body = { error: 'Unknown key' }
     return
   }
   if (info.agent !== ctx.get('user-agent')) {
@@ -342,17 +342,17 @@ router.get('/receive', async ctx => {
 router.get('/', async ctx => {
   const agent = ctx.get('user-agent')
   console.log(ctx.ip, agent)
-  await sendfile(ctx, agent.includes('Kobo') || agent.includes('Kindle')? 'download.html' : 'upload.html')
+  await sendfile(ctx, agent.includes('Kobo') || agent.includes('Kindle') ? 'download.html' : 'upload.html')
 })
 
 
 app.use(router.routes())
 app.use(router.allowedMethods())
 
-fs.rm('uploads', {recursive: true}, (err) => {
-  if (err) throw err
-  mkdirp('uploads').then (() => {
-    app.listen(port)
-    console.log('server is listening on port ' + port)
-  })
-})
+// fs.rm('uploads', {recursive: true}, (err) => {
+//   if (err) throw err
+//   mkdirp('uploads').then (() => {
+//     app.listen(port)
+//     console.log('server is listening on port ' + port)
+//   })
+// })
